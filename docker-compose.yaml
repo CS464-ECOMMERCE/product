@@ -1,0 +1,46 @@
+version: "3.3"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - 8081:8080
+    #   - 2345:2345 #delve debug normal
+    #   - 4000:4000 #delve debug tests
+    volumes:
+      - ./secrets/testing.env:/app/secrets/.env
+    
+    env_file: ./secrets/testing.env
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: postgres:14.1-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+    depends_on:
+      - database
+  # redis:
+  #   image: "redis:alpine"
+
+
+volumes:
+  psql_data:
+    # external: true
+    # name: psql_data
