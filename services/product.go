@@ -32,7 +32,7 @@ func (p *ProductService) CreateProduct(product *pb.Product) (*pb.Product, error)
 }
 
 func (p *ProductService) UpdateProduct(product *pb.Product) (*pb.Product, error) {
-	err := storage.StorageInstance.Product.Update(product)
+	product, err := storage.StorageInstance.Product.Update(product)
 	if err != nil {
 		return product, err
 	}

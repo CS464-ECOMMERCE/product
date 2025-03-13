@@ -9,7 +9,7 @@ import (
 type ProductInterface interface {
 	CreateProduct(Product *pb.Product) (*pb.Product, error)
 	Get(id string) (*pb.Product, error)
-	Update(Product *pb.Product) error
+	Update(Product *pb.Product) (*pb.Product, error)
 	Delete(id string) error
 }
 
@@ -43,8 +43,12 @@ func (i *ProductDB) Get(id string) (*pb.Product, error) {
 }
 
 // Update implements ProductInterface.
-func (i *ProductDB) Update(Product *pb.Product) error {
-	return i.write.Save(Product).Error
+func (i *ProductDB) Update(Product *pb.Product) (*pb.Product, error) {
+	err := i.write.Model(&pb.Product{}).Where("id = ?", Product.Id).Updates(Product).Error
+	if err != nil {
+		return nil, err
+	}
+	return Product, nil
 }
 
 func NewProductTable(read, write *gorm.DB) ProductInterface {

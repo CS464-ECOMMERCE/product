@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: ecommerce.proto
 
-package ecommerce
+package ecommerce_app
 
 import (
 	context "context"
@@ -197,11 +197,12 @@ var CartService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ProductService_ListProducts_FullMethodName  = "/ecommerce.ProductService/ListProducts"
-	ProductService_GetProduct_FullMethodName    = "/ecommerce.ProductService/GetProduct"
-	ProductService_CreateProduct_FullMethodName = "/ecommerce.ProductService/CreateProduct"
-	ProductService_DeleteProduct_FullMethodName = "/ecommerce.ProductService/DeleteProduct"
-	ProductService_UpdateProduct_FullMethodName = "/ecommerce.ProductService/UpdateProduct"
+	ProductService_ListProducts_FullMethodName        = "/ecommerce.ProductService/ListProducts"
+	ProductService_GetProduct_FullMethodName          = "/ecommerce.ProductService/GetProduct"
+	ProductService_CreateProduct_FullMethodName       = "/ecommerce.ProductService/CreateProduct"
+	ProductService_DeleteProduct_FullMethodName       = "/ecommerce.ProductService/DeleteProduct"
+	ProductService_UpdateProduct_FullMethodName       = "/ecommerce.ProductService/UpdateProduct"
+	ProductService_UpdateProductImages_FullMethodName = "/ecommerce.ProductService/UpdateProductImages"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -210,10 +211,12 @@ const (
 type ProductServiceClient interface {
 	ListProducts(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
-	// rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+	// rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse)
+	// {}
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*Empty, error)
 	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error)
+	UpdateProductImages(ctx context.Context, in *UpdateProductImagesRequest, opts ...grpc.CallOption) (*UpdateProductImagesResponse, error)
 }
 
 type productServiceClient struct {
@@ -274,16 +277,28 @@ func (c *productServiceClient) UpdateProduct(ctx context.Context, in *UpdateProd
 	return out, nil
 }
 
+func (c *productServiceClient) UpdateProductImages(ctx context.Context, in *UpdateProductImagesRequest, opts ...grpc.CallOption) (*UpdateProductImagesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateProductImagesResponse)
+	err := c.cc.Invoke(ctx, ProductService_UpdateProductImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations must embed UnimplementedProductServiceServer
 // for forward compatibility.
 type ProductServiceServer interface {
 	ListProducts(context.Context, *Empty) (*ListProductsResponse, error)
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
-	// rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+	// rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse)
+	// {}
 	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
 	DeleteProduct(context.Context, *DeleteProductRequest) (*Empty, error)
 	UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error)
+	UpdateProductImages(context.Context, *UpdateProductImagesRequest) (*UpdateProductImagesResponse, error)
 	mustEmbedUnimplementedProductServiceServer()
 }
 
@@ -308,6 +323,9 @@ func (UnimplementedProductServiceServer) DeleteProduct(context.Context, *DeleteP
 }
 func (UnimplementedProductServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
+}
+func (UnimplementedProductServiceServer) UpdateProductImages(context.Context, *UpdateProductImagesRequest) (*UpdateProductImagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductImages not implemented")
 }
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 func (UnimplementedProductServiceServer) testEmbeddedByValue()                        {}
@@ -420,6 +438,24 @@ func _ProductService_UpdateProduct_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpdateProductImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProductImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpdateProductImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_UpdateProductImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpdateProductImages(ctx, req.(*UpdateProductImagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -446,6 +482,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateProduct",
 			Handler:    _ProductService_UpdateProduct_Handler,
+		},
+		{
+			MethodName: "UpdateProductImages",
+			Handler:    _ProductService_UpdateProductImages_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

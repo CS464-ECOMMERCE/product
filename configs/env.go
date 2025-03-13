@@ -61,7 +61,7 @@ func InitEnv() {
 	POSTGRESQL_MAX_IDLE_CONNS = maxIdleConns
 
 	// grpc
-	PRODUCT_SERVICE_ADDR = getEnv("PRODUCT_SERVICE_ADDR", "product.default.svc.cluster.local:50051")
+	PRODUCT_SERVICE_ADDR = getEnv("PRODUCT_SERVICE_ADDR", "product.default.svc.cluster.local:50050")
 
 }
 

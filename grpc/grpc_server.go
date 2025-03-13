@@ -8,6 +8,8 @@ import (
 	pb "product/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+   	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func Init() {
@@ -17,6 +19,9 @@ func Init() {
 	}
 
 	s := grpc.NewServer()
+	healthServer := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(s, healthServer)
+	healthServer.SetServingStatus("ProductService", grpc_health_v1.HealthCheckResponse_SERVING)
 	pb.RegisterProductServiceServer(s, controllers.NewProductController())
 
 	log.Printf("Server listening at %v", lis.Addr())

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ecommerce;
 // option go_package = "bistream/proto";
-option go_package = "https://github.com/ecommerce";
+option go_package = "https://github.com/CS464-ECOMMERCE/ecommerce-app";
 
 // -----------------Cart service-----------------
 
@@ -38,42 +38,51 @@ message Empty {}
 service ProductService {
   rpc ListProducts(Empty) returns (ListProductsResponse) {}
   rpc GetProduct(GetProductRequest) returns (Product) {}
-  // rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+  // rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse)
+  // {}
   rpc CreateProduct(CreateProductRequest) returns (Product) {}
-  rpc DeleteProduct(DeleteProductRequest) returns (Empty) {}  
+  rpc DeleteProduct(DeleteProductRequest) returns (Empty) {}
   rpc UpdateProduct(UpdateProductRequest) returns (Product) {}
+  rpc UpdateProductImages(UpdateProductImagesRequest)
+      returns (UpdateProductImagesResponse) {}
 }
+
+message Product {
+  string id = 1;
+  string name = 2;
+  float price = 3;
+  int32 inventory = 4;
+  string description = 5;
+  repeated string images = 6; // [bucketname+filename]
+  string stripe_price_id = 7;
+  string stripe_product_id = 8;
+  // Categories such as "clothing" or "kitchen" that can be used to look up
+  // other related products.
+  //   repeated string categories = 6;
+}
+
+message UpdateProductImagesRequest { string id = 1; }
+
+message UpdateProductImagesResponse { string presigned_url = 1; }
 
 message CreateProductRequest {
   string name = 1;
-  string description = 2;
-  string picture = 3;
-  float price = 4;
-  int32 stock = 5;
+  float price = 2;
+  int32 inventory = 3;
+  string description = 4;
   // repeated string categories = 6;
 }
 
 message UpdateProductRequest {
   string id = 1;
   string name = 2;
-  string description = 3;
-  string picture = 4;
-  float price = 5;
-  int32 stock = 6;
+  float price = 3;
+  int32 inventory = 4;
+  string description = 5;
+  repeated string images = 6;
+  string stripe_price_id = 7;
+  string stripe_product_id = 8;
   // repeated string categories = 7;
-}
-
-message Product {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  string picture = 4;
-  float price = 5;
-  int32 stock = 6;
-
-  // Categories such as "clothing" or "kitchen" that can be used to look up
-  // other related products.
-  //   repeated string categories = 6;
 }
 
 message DeleteProductRequest { string id = 1; }
