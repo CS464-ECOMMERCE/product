@@ -2,11 +2,15 @@ package storage
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"product/configs"
 	"sync"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Storage struct {
@@ -16,8 +20,18 @@ type Storage struct {
 }
 
 func (s *Storage) InitDB() {
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,          // Don't include params in the SQL log
+			Colorful:                  false,         // Disable color
+		},
+	)
 	var err error
-	s.write, err = gorm.Open(postgres.Open(configs.POSTGRESQL_CONN_STRING_MASTER), &gorm.Config{})
+	s.write, err = gorm.Open(postgres.Open(configs.POSTGRESQL_CONN_STRING_MASTER), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		fmt.Println("status: ", err)
 	}
@@ -28,7 +42,7 @@ func (s *Storage) InitDB() {
 	writeDB.SetMaxOpenConns(configs.POSTGRESQL_MAX_OPEN_CONNS)
 	writeDB.SetMaxIdleConns(configs.POSTGRESQL_MAX_IDLE_CONNS)
 
-	s.read, err = gorm.Open(postgres.Open(configs.POSTGRESQL_CONN_STRING_SLAVE), &gorm.Config{})
+	s.read, err = gorm.Open(postgres.Open(configs.POSTGRESQL_CONN_STRING_SLAVE), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		fmt.Println("status: ", err)
 	}

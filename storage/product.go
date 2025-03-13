@@ -29,13 +29,13 @@ func (i *ProductDB) CreateProduct(Product *pb.Product) (*pb.Product, error) {
 
 // Delete implements ProductInterface.
 func (i *ProductDB) Delete(id string) error {
-	return i.write.Delete(&pb.Product{}, id).Error
+	return i.write.Delete(&pb.Product{}, "id = ?", id).Error
 }
 
 // Get implements ProductInterface.
 func (i *ProductDB) Get(id string) (*pb.Product, error) {
 	Product := &pb.Product{}
-	ret := i.read.First(Product, id)
+	ret := i.read.Where("id = ?", id).First(Product)
 	if ret.Error != nil {
 		return nil, ret.Error
 	}
