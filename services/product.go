@@ -44,3 +44,14 @@ func (p *ProductService) DeleteProduct(id uint64) error {
 	}
 	return nil
 }
+
+func (p *ProductService) ListProducts(req *pb.ListProductsRequest) (*pb.ListProductsResponse, error) {
+	products, cursor, err := storage.StorageInstance.Product.List(req.GetLimit(), req.GetCursor())
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ListProductsResponse{
+		Products: products,
+		Cursor:   cursor,
+	}, nil
+}

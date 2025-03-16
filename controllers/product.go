@@ -59,3 +59,12 @@ func (p *ProductController) DeleteProduct(ctx context.Context, message *pb.Delet
 	}
 	return &pb.Empty{}, nil
 }
+
+
+func (p *ProductController) ListProducts(ctx context.Context, message *pb.ListProductsRequest) (*pb.ListProductsResponse, error) {
+	products, err := services.NewProductService().ListProducts(message)
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
+}

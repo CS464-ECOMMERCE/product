@@ -12,6 +12,7 @@ type ProductInterface interface {
 	Get(id uint64) (*pb.Product, error)
 	Update(Product *pb.Product) (*pb.Product, error)
 	Delete(id uint64) error
+	List(limit uint64, cursorID uint64) ([]*pb.Product, uint64, error)
 }
 
 type ProductDB struct {
@@ -56,6 +57,30 @@ func (i *ProductDB) Update(Product *pb.Product) (*pb.Product, error) {
 	}
 
 	return Product, nil
+}
+
+func (i *ProductDB) List(limit uint64, cursorID uint64) ([]*pb.Product, uint64, error) {
+	var products []*pb.Product
+
+	query := i.read.Order("id ASC").Limit(int(limit))
+
+	// Apply cursor condition if provided
+	if cursorID > 0 {
+		query = query.Where("id > ?", cursorID)
+	}
+
+	// Fetch the products
+	if err := query.Find(&products).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Get the last product's ID as the next cursor
+	var nextCursor uint64
+	if len(products) > 0 {
+		nextCursor = products[len(products)-1].Id
+	}
+
+	return products, nextCursor, nil
 }
 
 func NewProductTable(read, write *gorm.DB) ProductInterface {
