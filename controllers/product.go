@@ -29,6 +29,7 @@ func (p *ProductController) CreateProduct(ctx context.Context, message *pb.Creat
 		Description: message.GetDescription(),
 		Price:       message.GetPrice(),
 		Inventory:   message.GetInventory(),
+		MerchantId:  message.GetMerchantId(),
 	})
 	if err != nil {
 		return nil, err
@@ -43,6 +44,7 @@ func (p *ProductController) UpdateProduct(ctx context.Context, message *pb.Updat
 		Description: message.GetDescription(),
 		Price:       message.GetPrice(),
 		Inventory:   message.GetInventory(),
+		MerchantId:  message.GetMerchantId(),
 	})
 	if err != nil {
 		return nil, err

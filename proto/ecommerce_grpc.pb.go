@@ -211,8 +211,6 @@ const (
 type ProductServiceClient interface {
 	ListProducts(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
-	// rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse)
-	// {}
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*Empty, error)
 	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error)
@@ -293,8 +291,6 @@ func (c *productServiceClient) UpdateProductImages(ctx context.Context, in *Upda
 type ProductServiceServer interface {
 	ListProducts(context.Context, *Empty) (*ListProductsResponse, error)
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
-	// rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse)
-	// {}
 	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
 	DeleteProduct(context.Context, *DeleteProductRequest) (*Empty, error)
 	UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error)
