@@ -17,17 +17,18 @@ type Storage struct {
 	read    *gorm.DB
 	write   *gorm.DB
 	Product ProductInterface
+	S3      S3Interface
 }
 
 func (s *Storage) InitDB() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second,   // Slow SQL threshold
+			SlowThreshold:             time.Second, // Slow SQL threshold
 			LogLevel:                  logger.Info, // Log level
-			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      false,          // Don't include params in the SQL log
-			Colorful:                  false,         // Disable color
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,       // Don't include params in the SQL log
+			Colorful:                  false,       // Disable color
 		},
 	)
 	var err error
@@ -75,6 +76,7 @@ func GetStorageInstance() *Storage {
 		StorageInstance = &Storage{}
 		StorageInstance.InitDB()
 		StorageInstance.Product = NewProductTable(StorageInstance.read, StorageInstance.write)
+		StorageInstance.S3 = NewS3()
 	})
 	return StorageInstance
 }

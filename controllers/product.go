@@ -68,3 +68,11 @@ func (p *ProductController) ListProducts(ctx context.Context, message *pb.ListPr
 	}
 	return products, nil
 }
+
+func (p *ProductController) UpdateProductImages(ctx context.Context, message *pb.UpdateProductImagesRequest) (*pb.UpdateProductImagesResponse, error) {
+	resp, err := services.NewProductService().UpdateProductImages(message)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}

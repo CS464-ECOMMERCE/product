@@ -3,6 +3,7 @@ package services
 import (
 	pb "product/proto"
 	"product/storage"
+	"strconv"
 )
 
 type ProductService struct {
@@ -46,12 +47,24 @@ func (p *ProductService) DeleteProduct(id uint64) error {
 }
 
 func (p *ProductService) ListProducts(req *pb.ListProductsRequest) (*pb.ListProductsResponse, error) {
-	products, cursor, err := storage.StorageInstance.Product.List(req.GetLimit(), req.GetCursor())
+	products, cursor, total, err := storage.StorageInstance.Product.List(req.GetLimit(), req.GetCursor())
 	if err != nil {
 		return nil, err
 	}
+
 	return &pb.ListProductsResponse{
 		Products: products,
 		Cursor:   cursor,
+		Total:    total,
 	}, nil
+}
+
+func (p *ProductService) UpdateProductImages(req *pb.UpdateProductImagesRequest) (*pb.UpdateProductImagesResponse, error) {
+	res := &pb.UpdateProductImagesResponse{}
+	presign_url, err := storage.NewS3().PresignedPutObject("test", strconv.FormatUint(req.GetId(), 10)+".jpeg")
+	if err != nil {
+		return nil, err
+	}
+	res.PresignedUrl = presign_url
+	return res, nil
 }
