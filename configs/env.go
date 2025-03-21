@@ -25,6 +25,7 @@ var (
 	S3_ENDPOINT                   string
 	S3_ACCESS_KEY                 string
 	S3_SECRET_KEY                 string
+	S3_BUCKET                     string
 )
 
 func InitEnv() {
@@ -70,6 +71,7 @@ func InitEnv() {
 	S3_ENDPOINT = getEnv("S3_ENDPOINT", "http://minio.default.svc.cluster.local:9000")
 	S3_ACCESS_KEY = getEnv("S3_ACCESS_KEY", "minioadmin")
 	S3_SECRET_KEY = getEnv("S3_SECRET_KEY", "minioadmin")
+	S3_BUCKET = getEnv("S3_BUCKET", "product")
 
 }
 
