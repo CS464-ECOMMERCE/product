@@ -4,6 +4,8 @@ import (
 	"errors"
 	pb "product/proto"
 	"product/storage"
+
+	"github.com/stripe/stripe-go/v81"
 )
 
 type ProductService struct {
@@ -37,10 +39,25 @@ func (p *ProductService) CreateProduct(product *pb.Product) (*pb.Product, error)
 	return storage.DBToGrpc(product_db), nil
 }
 
-func (p *ProductService) UpdateProduct(product *pb.Product) (*pb.Product, error) {
-	product_db, err := storage.StorageInstance.Product.Update(storage.GrpcToDB(product))
+func (p *ProductService) UpdateProduct(updatedProduct *pb.Product) (*pb.Product, error) {
+	existingProduct, err := storage.StorageInstance.Product.Get(updatedProduct.Id)
 	if err != nil {
-		return product, err
+		return nil, err
+	}
+
+	// check if the price has changed
+	var stripeProduct *stripe.Product
+	if updatedProduct.Price != 0 && updatedProduct.Price != existingProduct.Price {
+		stripeProduct, err = NewStripeService().UpdateProductPrice(existingProduct.StripeProductId, existingProduct.StripePriceId, updatedProduct.Price)
+		if err != nil {
+			return nil, err
+		}
+		updatedProduct.StripePriceId = stripeProduct.DefaultPrice.ID
+	}
+
+	product_db, err := storage.StorageInstance.Product.Update(storage.GrpcToDB(updatedProduct))
+	if err != nil {
+		return updatedProduct, err
 	}
 	return storage.DBToGrpc(product_db), nil
 }
