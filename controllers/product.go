@@ -129,3 +129,11 @@ func (p *ProductController) UpdateProductImages(stream pb.ProductService_UpdateP
 	}
 
 }
+
+func (p *ProductController) ValidateProductInventory(ctx context.Context, message *pb.ValidateProductInventoryRequest) (*pb.ValidateProductInventoryResponse, error) {
+	valid, err := services.NewProductService().ValidateProductInventory(message.GetProductId(), message.GetProductId())
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ValidateProductInventoryResponse{Valid: valid}, nil
+}

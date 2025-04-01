@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	pb "product/proto"
 	"product/storage"
 )
@@ -76,4 +77,16 @@ func (p *ProductService) UpdateProductImages(product *pb.Product) (*pb.Product, 
 		return product, err
 	}
 	return storage.DBToGrpc(product_db), nil
+}
+
+func (p *ProductService) ValidateProductInventory(id, requestedQuantity uint64) (bool, error) {
+	product, err := storage.StorageInstance.Product.Get(id)
+	if err != nil {
+		return false, err
+	}
+
+	if product.Inventory < requestedQuantity {
+		return false, errors.New("insufficient inventory")
+	}
+	return true, nil
 }
