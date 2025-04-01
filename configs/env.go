@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/stripe/stripe-go/v81"
 )
 
 var (
@@ -73,6 +74,8 @@ func InitEnv() {
 	S3_SECRET_KEY = getEnv("S3_SECRET_KEY", "minioadmin")
 	S3_BUCKET = getEnv("S3_BUCKET", "product")
 
+	// Init Stripe
+	stripe.Key = getEnv("STRIPE_SECRET_KEY", "some-secret-key")
 }
 
 func GetMongoURI() string {

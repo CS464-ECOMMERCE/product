@@ -22,6 +22,14 @@ func (p *ProductService) GetProduct(id uint64) (*pb.Product, error) {
 }
 
 func (p *ProductService) CreateProduct(product *pb.Product) (*pb.Product, error) {
+	stripeProduct, err := NewStripeService().CreateNewProduct(product.Name, product.Price)
+	if err != nil {
+		return nil, err
+	}
+
+	product.StripeProductId = stripeProduct.ID
+	product.StripePriceId = stripeProduct.DefaultPrice.ID
+
 	product_db, err := storage.StorageInstance.Product.CreateProduct(storage.GrpcToDB(product))
 	if err != nil {
 		return nil, err
