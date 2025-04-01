@@ -5,128 +5,71 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
-	"product/configs"
 	"strings"
-	"time"
 
+	"product/configs"
+
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
+	"google.golang.org/api/option"
 )
 
 type S3Interface interface {
-	PresignedPutObject(bucketName string, objectName string) (string, error)
+	Put(filename string, file *bytes.Buffer) (string, error)
 }
 
-type S3 struct {
-	client *minio.Client
+type GCS struct {
+	client *storage.Client
 	bucket string
 }
 
-func NewS3() *S3 {
+func NewS3() *GCS {
+	ctx := context.Background()
 
-	// Initialize minio client object.
-	minioClient, err := minio.New(configs.S3_ENDPOINT, &minio.Options{
-		Creds: credentials.NewStaticV4(configs.S3_SECRET_KEY, configs.S3_ACCESS_KEY, ""),
-	})
+	// Initialize GCS Client
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(configs.GCS_CREDENTIALS))
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Failed to create GCS client: %v", err)
 	}
 
-	// minio create but
-
-	return &S3{client: minioClient, bucket: configs.S3_BUCKET}
+	return &GCS{client: client, bucket: configs.S3_BUCKET}
 }
 
-func (s *S3) CreateBucketIfNotExists() error {
-	exists, err := s.client.BucketExists(context.Background(), s.bucket)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		err = s.client.MakeBucket(context.Background(), s.bucket, minio.MakeBucketOptions{})
-		if err != nil {
-			return err
-		}
-	}
-	err = s.client.SetBucketPolicy(context.Background(), s.bucket,
-		`{
-"Version": "2012-10-17",
-"Statement": [
-{
-	"Effect": "Allow",
-	"Principal": {
-		"AWS": [
-			"*"
-		]
-	},
-	"Action": [
-		"s3:GetBucketLocation",
-		"s3:ListBucket"
-	],
-	"Resource": [
-		"arn:aws:s3:::`+s.bucket+`"
-	]
-},
-{
-	"Effect": "Allow",
-	"Principal": {
-		"AWS": [
-			"*"
-		]
-	},
-	"Action": [
-		"s3:GetObject"
-	],
-	"Resource": [
-		"arn:aws:s3:::`+s.bucket+`/*"
-	]
-}
-]
-}`)
+// Upload File to GCS
+func (g *GCS) Put(filename string, file *bytes.Buffer) (string, error) {
+	ctx := context.Background()
+	bucket := g.client.Bucket(g.bucket)
 
-	if err != nil {
-		return err
-
-	}
-	return nil
-}
-
-func (s *S3) PresignedPutObject(bucketName string, objectName string) (string, error) {
-	// Ensure the bucket exists
-	err := s.CreateBucketIfNotExists()
-	if err != nil {
-		return "", err
-	}
-	// Generate presigned URL
-	presignedURL, err := s.client.PresignedPutObject(context.Background(), bucketName, objectName, 24*time.Hour)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return presignedURL.String(), nil
-}
-
-func (s *S3) Put(filename string, file *bytes.Buffer) (string, error) {
-
-	// ensure bucket exists
-	err := s.CreateBucketIfNotExists()
-	if err != nil {
-		return "", err
-	}
-	file_type := strings.Split(filename, ".")[1]
-	if file_type != "jpeg" && file_type != "png" {
+	// Validate file type
+	fileType := strings.ToLower(strings.Split(filename, ".")[1])
+	if fileType != "jpeg" && fileType != "png" {
 		return "", errors.New("file type not allowed")
 	}
-	if file.Len() > 1024*1024*10 {
-		return "", errors.New("file size exceeds the limit 200mb")
-	}
-	unique_filename := fmt.Sprintf("%s-%s.%s", strings.Split(filename, ".")[0], uuid.New().String(), file_type)
-	_, err = s.client.PutObject(context.Background(), s.bucket, unique_filename, bytes.NewReader(file.Bytes()), int64(file.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s/%s/%s", s.client.EndpointURL(), s.bucket, unique_filename), nil
 
+	// Validate file size (max 10MB)
+	if file.Len() > 1024*1024*10 {
+		return "", errors.New("file size exceeds the limit (10MB)")
+	}
+
+	// Generate a unique filename
+	uniqueFilename := fmt.Sprintf("%s-%s.%s", strings.Split(filename, ".")[0], uuid.New().String(), fileType)
+	object := bucket.Object(uniqueFilename)
+
+	// Upload file
+	writer := object.NewWriter(ctx)
+	writer.ContentType = "application/octet-stream"
+
+	if _, err := io.Copy(writer, file); err != nil {
+		return "", fmt.Errorf("failed to upload file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		return "", fmt.Errorf("failed to close writer: %v", err)
+	}
+
+	// Generate public URL
+	url := fmt.Sprintf("https://storage.googleapis.com/%s/%s", g.bucket, uniqueFilename)
+
+	return url, nil
 }

@@ -27,6 +27,8 @@ var (
 	S3_ACCESS_KEY                 string
 	S3_SECRET_KEY                 string
 	S3_BUCKET                     string
+	GCS_CREDENTIALS               string
+	GCS_PROJECT_ID                string
 )
 
 func InitEnv() {
@@ -69,13 +71,16 @@ func InitEnv() {
 	PRODUCT_SERVICE_ADDR = getEnv("PRODUCT_SERVICE_ADDR", "product.default.svc.cluster.local:50050")
 
 	//S3
-	S3_ENDPOINT = getEnv("S3_ENDPOINT", "http://minio.default.svc.cluster.local:9000")
+	S3_ENDPOINT = getEnv("S3_ENDPOINT", "minio.default.svc.cluster.local:9000")
 	S3_ACCESS_KEY = getEnv("S3_ACCESS_KEY", "minioadmin")
 	S3_SECRET_KEY = getEnv("S3_SECRET_KEY", "minioadmin")
-	S3_BUCKET = getEnv("S3_BUCKET", "product")
+	S3_BUCKET = getEnv("S3_BUCKET", "cs464-application")
+	GCS_CREDENTIALS = "/app/secrets/backend-sa-key.json"
+	GCS_PROJECT_ID = getEnv("GCS_PROJECT_ID", "cs464-ecommerce")
 
 	// Init Stripe
 	stripe.Key = getEnv("STRIPE_SECRET_KEY", "some-secret-key")
+
 }
 
 func GetMongoURI() string {
