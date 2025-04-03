@@ -16,7 +16,7 @@ func NewProductService() *ProductService {
 }
 
 func (p *ProductService) GetProduct(id uint64) (*pb.Product, error) {
-	product_db, err := storage.StorageInstance.Product.Get(id)
+	product_db, err := storage.StorageInstance.Product.Get(id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (p *ProductService) CreateProduct(product *pb.Product) (*pb.Product, error)
 }
 
 func (p *ProductService) UpdateProduct(updatedProduct *pb.Product) (*pb.Product, error) {
-	existingProduct, err := storage.StorageInstance.Product.Get(updatedProduct.Id)
+	existingProduct, err := storage.StorageInstance.Product.Get(updatedProduct.Id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (p *ProductService) UpdateProduct(updatedProduct *pb.Product) (*pb.Product,
 		updatedProduct.StripePriceId = stripeProduct.DefaultPrice.ID
 	}
 
-	product_db, err := storage.StorageInstance.Product.Update(storage.GrpcToDB(updatedProduct))
+	product_db, err := storage.StorageInstance.Product.Update(storage.GrpcToDB(updatedProduct), nil)
 	if err != nil {
 		return updatedProduct, err
 	}
@@ -105,7 +105,7 @@ func (p *ProductService) UpdateProductImages(product *pb.Product) (*pb.Product, 
 }
 
 func (p *ProductService) ValidateProductInventory(id, requestedQuantity uint64) (bool, error) {
-	product, err := storage.StorageInstance.Product.Get(id)
+	product, err := storage.StorageInstance.Product.Get(id, nil)
 	if err != nil {
 		return false, err
 	}

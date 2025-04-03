@@ -13,10 +13,13 @@ import (
 
 type ProductController struct {
 	pb.UnimplementedProductServiceServer
+	cartService *services.CartService
 }
 
-func NewProductController() *ProductController {
-	return &ProductController{}
+func NewProductController(cartService *services.CartService) *ProductController {
+	return &ProductController{
+		cartService: cartService,
+	}
 }
 
 func (p *ProductController) GetProduct(ctx context.Context, message *pb.GetProductRequest) (*pb.Product, error) {
@@ -136,4 +139,12 @@ func (p *ProductController) ValidateProductInventory(ctx context.Context, messag
 		return nil, err
 	}
 	return &pb.ValidateProductInventoryResponse{Valid: valid}, nil
+}
+
+func (p *ProductController) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+	resp, err := services.NewOrderService(p.cartService).PlaceOrder(req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

@@ -18,6 +18,7 @@ type Storage struct {
 	write   *gorm.DB
 	Product ProductInterface
 	S3      S3Interface
+	Order   OrderInterface
 }
 
 func (s *Storage) InitDB() {
@@ -68,6 +69,10 @@ func (s *Storage) AutoMigrate(model interface{}) {
 	s.read.AutoMigrate(model)
 }
 
+func (s *Storage) BeginTransaction() *gorm.DB {
+	return s.write.Begin()
+}
+
 var StorageInstance *Storage
 var once sync.Once
 
@@ -77,6 +82,7 @@ func GetStorageInstance() *Storage {
 		StorageInstance.InitDB()
 		StorageInstance.Product = NewProductTable(StorageInstance.read, StorageInstance.write)
 		StorageInstance.S3 = NewS3()
+		StorageInstance.Order = NewOrderTable(StorageInstance.write)
 	})
 	return StorageInstance
 }

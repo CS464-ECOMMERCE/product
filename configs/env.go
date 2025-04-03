@@ -23,6 +23,7 @@ var (
 	POSTGRESQL_MAX_IDLE_CONNS     int
 	POSTGRESQL_MAX_OPEN_CONNS     int
 	PRODUCT_SERVICE_ADDR          string
+	CART_SERVICE_ADDR             string
 	S3_ENDPOINT                   string
 	S3_ACCESS_KEY                 string
 	S3_SECRET_KEY                 string
@@ -69,6 +70,7 @@ func InitEnv() {
 
 	// grpc
 	PRODUCT_SERVICE_ADDR = getEnv("PRODUCT_SERVICE_ADDR", "product.default.svc.cluster.local:50050")
+	CART_SERVICE_ADDR = getEnv("CART_SERVICE_ADDR", "cart.default.svc.cluster.local:50051")
 
 	//S3
 	S3_ENDPOINT = getEnv("S3_ENDPOINT", "minio.default.svc.cluster.local:9000")

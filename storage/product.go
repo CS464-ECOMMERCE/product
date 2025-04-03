@@ -10,8 +10,8 @@ import (
 
 type ProductInterface interface {
 	CreateProduct(Product *models.Product) (*models.Product, error)
-	Get(id uint64) (*models.Product, error)
-	Update(Product *models.Product) (*models.Product, error)
+	Get(id uint64, tx *gorm.DB) (*models.Product, error)
+	Update(Product *models.Product, tx *gorm.DB) (*models.Product, error)
 	Delete(id uint64) error
 	List(limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error)
 	ListByMerchantId(merchantId uint64, limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error)
@@ -38,9 +38,13 @@ func (i *ProductDB) Delete(id uint64) error {
 }
 
 // Get implements ProductInterface.
-func (i *ProductDB) Get(id uint64) (*models.Product, error) {
+func (i *ProductDB) Get(id uint64, tx *gorm.DB) (*models.Product, error) {
 	Product := &models.Product{}
-	ret := i.read.Where("id = ?", id).First(Product)
+	db := tx
+	if db == nil {
+		db = i.read
+	}
+	ret := db.Where("id = ?", id).First(Product)
 	if ret.Error != nil {
 		return nil, ret.Error
 	}
@@ -48,8 +52,13 @@ func (i *ProductDB) Get(id uint64) (*models.Product, error) {
 }
 
 // Update implements ProductInterface.
-func (i *ProductDB) Update(Product *models.Product) (*models.Product, error) {
-	result := i.write.Model(&models.Product{}).Where("id = ?", Product.Id).Updates(Product)
+func (i *ProductDB) Update(Product *models.Product, tx *gorm.DB) (*models.Product, error) {
+	db := tx
+
+	if db == nil {
+		db = i.write
+	}
+	result := db.Model(&models.Product{}).Where("id = ?", Product.Id).Updates(Product)
 
 	if result.Error != nil {
 		return nil, result.Error // Return the actual error
