@@ -12,6 +12,7 @@ type ProductInterface interface {
 	CreateProduct(Product *models.Product) (*models.Product, error)
 	Get(id uint64, tx *gorm.DB) (*models.Product, error)
 	Update(Product *models.Product, tx *gorm.DB) (*models.Product, error)
+	UpdateInventory(id, inventory uint64, tx *gorm.DB) error
 	Delete(id uint64) error
 	List(limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error)
 	ListByMerchantId(merchantId uint64, limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error)
@@ -69,6 +70,28 @@ func (i *ProductDB) Update(Product *models.Product, tx *gorm.DB) (*models.Produc
 	}
 
 	return Product, nil
+}
+
+// UpdateInventory implements ProductInterface.
+// This function is needed to update quantity, and handle edge case where inventory is 0.
+// Using normal `Updates` with inventory = 0 will NOT update the inventory to 0.
+func (i *ProductDB) UpdateInventory(id, inventory uint64, tx *gorm.DB) error {
+	db := tx
+
+	if db == nil {
+		db = i.write
+	}
+	result := db.Model(&models.Product{}).Where("id = ?", id).Update("inventory", inventory)
+
+	if result.Error != nil {
+		return result.Error // Return the actual error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("no product found with the given ID")
+	}
+
+	return nil
 }
 
 func (i *ProductDB) List(limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error) {

@@ -102,8 +102,8 @@ func (o *OrderService) validateCartAndGetPaymentItems(order *models.Order, cartI
 		}
 
 		// Update inventory
-		product.Inventory -= item.Quantity
-		_, err = storage.StorageInstance.Product.Update(product, tx)
+		updatedInventory := product.Inventory - item.Quantity
+		err = storage.StorageInstance.Product.UpdateInventory(product.Id, updatedInventory, tx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update inventory: %w", err)
 		}
