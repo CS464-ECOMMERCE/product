@@ -30,6 +30,7 @@ var (
 	S3_BUCKET                     string
 	GCS_CREDENTIALS               string
 	GCS_PROJECT_ID                string
+	FRONTEND_URL                  string
 )
 
 func InitEnv() {
@@ -83,6 +84,8 @@ func InitEnv() {
 	// Init Stripe
 	stripe.Key = getEnv("STRIPE_SECRET_KEY", "some-secret-key")
 
+	// frontend (for stripe)
+	FRONTEND_URL = getEnv("FRONTEND_URL", "http://localhost:3000")
 }
 
 func GetMongoURI() string {

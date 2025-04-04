@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"product/configs"
 	"product/models"
 	pb "product/proto"
 	"product/storage"
@@ -30,7 +31,6 @@ func NewOrderService(cartClient *CartService) *OrderService {
 
 func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
 	resp := &pb.PlaceOrderResponse{}
-	fmt.Println("qhwrtohinrothinwortihnworithnowrthnwrtioh")
 
 	// Get the user's cart
 	cart, err := o.cartClient.GetCart(req.SessionId)
@@ -59,17 +59,17 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 		return resp, fmt.Errorf("failed to validate cart: %w", err)
 	}
 
+	order, err = storage.StorageInstance.Order.CreateOrder(order, tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to save order: %w", err)
+	}
+
 	// Create payment session
 	sess, err := o.createNewPayment(order.Id, req.UserEmail, paymentItem)
 	if err != nil {
 		tx.Rollback()
 		return resp, fmt.Errorf("failed to create payment: %w", err)
-	}
-
-	order, err = storage.StorageInstance.Order.CreateOrder(order, tx)
-	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("failed to save order: %w", err)
 	}
 
 	// Delete cart last
@@ -144,7 +144,7 @@ func (o *OrderService) createNewPayment(orderId uint64, email string, paymentIte
 
 	// Custom metadata for Stripe Event
 	metadata := map[string]string{
-		"OrderId": fmt.Sprint(orderId),
+		"orderId": fmt.Sprint(orderId),
 	}
 
 	// Create a new checkout session
@@ -155,8 +155,8 @@ func (o *OrderService) createNewPayment(orderId uint64, email string, paymentIte
 		}),
 		LineItems:     lineItems,
 		Mode:          stripe.String(string(stripe.CheckoutSessionModePayment)),
-		SuccessURL:    stripe.String("http://localhost:3000/stripe/success"),
-		CancelURL:     stripe.String("http://localhost:3000/stripe/cancel"),
+		SuccessURL:    stripe.String(fmt.Sprintf("%s/stripe/success", configs.FRONTEND_URL)),
+		CancelURL:     stripe.String(fmt.Sprintf("%s/stripe/cancel?session_id={CHECKOUT_SESSION_ID}", configs.FRONTEND_URL)),
 		ExpiresAt:     stripe.Int64(expiresAt),
 		CustomerEmail: stripe.String(email),
 		Metadata:      metadata,
