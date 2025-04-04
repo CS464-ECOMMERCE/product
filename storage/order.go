@@ -8,6 +8,7 @@ import (
 
 type OrderInterface interface {
 	CreateOrder(order *models.Order, tx *gorm.DB) (*models.Order, error)
+	UpdateOrder(order *models.Order, tx *gorm.DB) error
 }
 
 type OrderDB struct {
@@ -34,4 +35,18 @@ func (i *OrderDB) CreateOrder(order *models.Order, tx *gorm.DB) (*models.Order, 
 		return nil, ret.Error
 	}
 	return order, nil
+}
+
+func (i *OrderDB) UpdateOrder(order *models.Order, tx *gorm.DB) error {
+	db := tx
+	if db == nil {
+		db = i.write
+	}
+
+	// Perform the create operation
+	ret := db.Model(&models.Order{}).Where("id = ?", order.Id).Updates(&order)
+	if ret.Error != nil {
+		return ret.Error
+	}
+	return nil
 }

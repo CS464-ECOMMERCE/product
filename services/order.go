@@ -59,6 +59,7 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 		return resp, fmt.Errorf("failed to validate cart: %w", err)
 	}
 
+	// Create order to attach ID into Stripe Payment
 	order, err = storage.StorageInstance.Order.CreateOrder(order, tx)
 	if err != nil {
 		tx.Rollback()
@@ -70,6 +71,13 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 	if err != nil {
 		tx.Rollback()
 		return resp, fmt.Errorf("failed to create payment: %w", err)
+	}
+
+	// attach checkout session ID
+	order.CheckoutSessionId = sess.ID
+	if err := storage.StorageInstance.Order.UpdateOrder(order, tx); err != nil {
+		tx.Rollback()
+		return resp, fmt.Errorf("unable to update order with checkout session id: %w", err)
 	}
 
 	// Delete cart last
