@@ -16,7 +16,7 @@ import (
 func Init() {
 	ClientInit()
 
-	lis, err := net.Listen("tcp", ":50050")
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
