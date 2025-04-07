@@ -46,7 +46,7 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 	// Create the order
 	order := &models.Order{
 		UserId: req.UserId,
-		Status: models.OrderStatusPending,
+		Status: models.OrderStatusProcessing,
 	}
 
 	// Start transaction
