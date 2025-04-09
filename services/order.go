@@ -53,7 +53,7 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 	tx := storage.StorageInstance.BeginTransaction()
 
 	// Validate cart and get payment items
-	paymentItem, err := o.validateCartAndGetPaymentItems(order, cart.Items, tx)
+	paymentItem, err := o.validateCartAndGetPaymentItems(req.UserId, order, cart.Items, tx)
 	if err != nil {
 		tx.Rollback()
 		return resp, fmt.Errorf("failed to validate cart: %w", err)
@@ -95,7 +95,7 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 	return resp, nil
 }
 
-func (o *OrderService) validateCartAndGetPaymentItems(order *models.Order, cartItems []*pb.CartItem, tx *gorm.DB) ([]*PaymentItem, error) {
+func (o *OrderService) validateCartAndGetPaymentItems(buyerId uint64, order *models.Order, cartItems []*pb.CartItem, tx *gorm.DB) ([]*PaymentItem, error) {
 	paymentItems := make([]*PaymentItem, 0, len(cartItems))
 	orderItems := make([]models.OrderItem, 0, len(cartItems))
 
@@ -103,6 +103,10 @@ func (o *OrderService) validateCartAndGetPaymentItems(order *models.Order, cartI
 		product, err := storage.StorageInstance.Product.Get(item.Id, tx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get product: %w", err)
+		}
+
+		if product.MerchantId == buyerId {
+			return nil, fmt.Errorf("cannot buy your own product: %s", product.Name)
 		}
 
 		if product.Inventory < item.Quantity {
