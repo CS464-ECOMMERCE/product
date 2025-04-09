@@ -45,7 +45,7 @@ func (i *ProductDB) Get(id uint64, tx *gorm.DB) (*models.Product, error) {
 	if db == nil {
 		db = i.read
 	}
-	ret := db.Where("id = ?", id).First(Product)
+	ret := db.Where("id = ?", id).Where("is_deleted = false").First(Product)
 	if ret.Error != nil {
 		return nil, ret.Error
 	}
@@ -97,10 +97,10 @@ func (i *ProductDB) UpdateInventory(id, inventory uint64, tx *gorm.DB) error {
 func (i *ProductDB) List(limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error) {
 	var products []*models.Product
 
-	query := i.read.Order("id ASC").Limit(int(limit))
+	query := i.read.Order("id ASC").Where("is_deleted = false").Limit(int(limit))
 	// Count the total number of products
 	var totalProducts int64
-	if err := i.read.Model(&models.Product{}).Distinct("id").Count(&totalProducts).Error; err != nil {
+	if err := i.read.Model(&models.Product{}).Where("is_deleted = false").Distinct("id").Where("is_deleted = false").Count(&totalProducts).Error; err != nil {
 		return nil, 0, 0, err
 	}
 
@@ -126,10 +126,10 @@ func (i *ProductDB) List(limit uint64, cursorID uint64) ([]*models.Product, uint
 func (i *ProductDB) ListByMerchantId(merchantId uint64, limit uint64, cursorID uint64) ([]*models.Product, uint64, uint64, error) {
 	var products []*models.Product
 
-	query := i.read.Order("id ASC").Where("merchant_id = ?", merchantId).Limit(int(limit))
+	query := i.read.Order("id ASC").Where("is_deleted = false").Where("merchant_id = ?", merchantId).Limit(int(limit))
 	// Count the total number of products
 	var totalProducts int64
-	if err := i.read.Model(&models.Product{}).Where("merchant_id = ?", merchantId).Distinct("id").Count(&totalProducts).Error; err != nil {
+	if err := i.read.Model(&models.Product{}).Where("is_deleted = false").Where("merchant_id = ?", merchantId).Distinct("id").Count(&totalProducts).Error; err != nil {
 		return nil, 0, 0, err
 	}
 

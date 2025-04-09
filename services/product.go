@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"product/models"
 	pb "product/proto"
 	"product/storage"
 
@@ -63,7 +64,15 @@ func (p *ProductService) UpdateProduct(updatedProduct *pb.Product) (*pb.Product,
 }
 
 func (p *ProductService) DeleteProduct(id uint64) error {
-	err := storage.StorageInstance.Product.Delete(id)
+	existingProduct, err := storage.StorageInstance.Product.Get(id, nil)
+	if err != nil {
+		return err
+	}
+
+	if existingProduct.IsDeleted {
+		return nil
+	}
+	_, err = storage.StorageInstance.Product.Update(&models.Product{Id: id, IsDeleted: true}, nil)
 	if err != nil {
 		return err
 	}

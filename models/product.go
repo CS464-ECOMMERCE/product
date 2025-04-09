@@ -14,4 +14,5 @@ type Product struct {
 	StripePriceId   string         `protobuf:"bytes,7,opt,name=stripe_price_id,json=stripePriceId,proto3" json:"stripe_price_id,omitempty"`
 	StripeProductId string         `protobuf:"bytes,8,opt,name=stripe_product_id,json=stripeProductId,proto3" json:"stripe_product_id,omitempty"`
 	MerchantId      uint64         `protobuf:"varint,9,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	IsDeleted       bool           `protobuf:"varint,10,opt,name=is_deleted,json=isDeleted,proto3" json:"is_deleted,omitempty"`
 }
