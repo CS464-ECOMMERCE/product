@@ -6,11 +6,13 @@ import (
 	pb "product/proto"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ProductInterface interface {
 	CreateProduct(Product *models.Product) (*models.Product, error)
 	Get(id uint64, tx *gorm.DB) (*models.Product, error)
+	GetWithLock(id uint64, tx *gorm.DB) (*models.Product, error)
 	Update(Product *models.Product, tx *gorm.DB) (*models.Product, error)
 	UpdateInventory(id, inventory uint64, tx *gorm.DB) error
 	Delete(id uint64) error
@@ -52,6 +54,23 @@ func (i *ProductDB) Get(id uint64, tx *gorm.DB) (*models.Product, error) {
 	return Product, nil
 }
 
+// GetWithLock implements ProductInterface.
+// This function is used to get a product with a lock.
+// Preparation to update an inventory.
+func (i *ProductDB) GetWithLock(id uint64, tx *gorm.DB) (*models.Product, error) {
+	Product := &models.Product{}
+	if tx == nil {
+		return nil, errors.New("transaction is required")
+	}
+	ret := tx.Clauses(clause.Locking{
+		Strength: "UPDATE",
+	}).Where("id = ?", id).Where("is_deleted = false").First(Product)
+	if ret.Error != nil {
+		return nil, ret.Error
+	}
+	return Product, nil
+}
+
 // Update implements ProductInterface.
 func (i *ProductDB) Update(Product *models.Product, tx *gorm.DB) (*models.Product, error) {
 	db := tx
@@ -76,12 +95,10 @@ func (i *ProductDB) Update(Product *models.Product, tx *gorm.DB) (*models.Produc
 // This function is needed to update quantity, and handle edge case where inventory is 0.
 // Using normal `Updates` with inventory = 0 will NOT update the inventory to 0.
 func (i *ProductDB) UpdateInventory(id, inventory uint64, tx *gorm.DB) error {
-	db := tx
-
-	if db == nil {
-		db = i.write
+	if tx == nil {
+		return errors.New("transaction is required")
 	}
-	result := db.Model(&models.Product{}).Where("id = ?", id).Update("inventory", inventory)
+	result := tx.Model(&models.Product{}).Where("id = ?", id).Update("inventory", inventory)
 
 	if result.Error != nil {
 		return result.Error // Return the actual error

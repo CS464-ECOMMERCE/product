@@ -6,6 +6,7 @@ import (
 	"product/models"
 	pb "product/proto"
 	"product/storage"
+	"sort"
 	"time"
 
 	"github.com/stripe/stripe-go/v81"
@@ -37,6 +38,10 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 	if err != nil {
 		return resp, fmt.Errorf("failed to get cart: %w", err)
 	}
+
+	// Sort cart by Product ID to prevent deadlocks
+	// Incrementally lock product rows
+	o.sortCartByProductId(cart.Items)
 
 	// Validate cart is not empty
 	if len(cart.Items) == 0 {
@@ -100,7 +105,7 @@ func (o *OrderService) validateCartAndGetPaymentItems(buyerId uint64, order *mod
 	orderItems := make([]models.OrderItem, 0, len(cartItems))
 
 	for _, item := range cartItems {
-		product, err := storage.StorageInstance.Product.Get(item.Id, tx)
+		product, err := storage.StorageInstance.Product.GetWithLock(item.Id, tx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get product: %w", err)
 		}
@@ -140,6 +145,12 @@ func (o *OrderService) validateCartAndGetPaymentItems(buyerId uint64, order *mod
 	order.OrderItems = orderItems
 
 	return paymentItems, nil
+}
+
+func (o *OrderService) sortCartByProductId(cartItems []*pb.CartItem) {
+	sort.Slice(cartItems, func(i, j int) bool {
+		return cartItems[i].Id < cartItems[j].Id
+	})
 }
 
 // Create a new payment details for order
