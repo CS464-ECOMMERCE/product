@@ -33,6 +33,12 @@ func NewOrderService(cartClient *CartService) *OrderService {
 func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
 	resp := &pb.PlaceOrderResponse{}
 
+	// Validate address
+	err := NewGoogleMapsService().ValidateAddress(req.Address, req.Country)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address: %w", err)
+	}
+
 	// Get the user's cart
 	cart, err := o.cartClient.GetCart(req.SessionId)
 	if err != nil {
@@ -50,8 +56,9 @@ func (o *OrderService) PlaceOrder(req *pb.PlaceOrderRequest) (*pb.PlaceOrderResp
 
 	// Create the order
 	order := &models.Order{
-		UserId: req.UserId,
-		Status: models.OrderStatusProcessing,
+		UserId:  req.UserId,
+		Status:  models.OrderStatusProcessing,
+		Address: req.Address,
 	}
 
 	// Start transaction
