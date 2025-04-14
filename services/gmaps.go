@@ -58,15 +58,12 @@ func (g *GoogleMapsService) ValidateAddress(address, country string) error {
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return fmt.Errorf("failed to parse response: %v", err)
 	}
-	fmt.Println(result)
 
 	// Check if the address is INVALID
-	if !result.Result.Verdict.AddressComplete ||
-		result.Result.Verdict.ValidationGranularity == "OTHER" ||
+	if result.Result.Verdict.ValidationGranularity == "OTHER" ||
 		result.Result.Verdict.ValidationGranularity == "GRANULARITY_UNSPECIFIED" {
-		return fmt.Errorf("address is not valid (granularity: %s), completeness: %v",
-			result.Result.Verdict.ValidationGranularity,
-			result.Result.Verdict.AddressComplete)
+		return fmt.Errorf("address is not valid (granularity: %s)",
+			result.Result.Verdict.ValidationGranularity)
 	}
 
 	return nil
