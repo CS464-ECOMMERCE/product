@@ -81,8 +81,11 @@ func GetStorageInstance() *Storage {
 		StorageInstance = &Storage{}
 		StorageInstance.InitDB()
 		StorageInstance.Product = NewProductTable(StorageInstance.read, StorageInstance.write)
-		// StorageInstance.S3 = NewS3()
-		StorageInstance.S3 = NewMinio()
+		if configs.ENVIRONMENT == "prod" {
+			StorageInstance.S3 = NewS3()
+		} else {
+			StorageInstance.S3 = NewMinio()
+		}
 		StorageInstance.Order = NewOrderTable(StorageInstance.write)
 	})
 	return StorageInstance

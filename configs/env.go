@@ -27,6 +27,7 @@ var (
 	GCS_PROJECT_ID                string
 	FRONTEND_URL                  string
 	GOOGLE_MAPS_API_KEY           string
+	ENVIRONMENT                   string
 )
 
 func InitEnv() {
@@ -79,6 +80,9 @@ func InitEnv() {
 
 	// Google Maps API Key
 	GOOGLE_MAPS_API_KEY = getEnv("GOOGLE_MAPS_API_KEY", "your-google-maps-api-key")
+
+	// Environment
+	ENVIRONMENT = getEnv("ENVIRONMENT", "dev")
 }
 
 // get env with default if the value is empty
